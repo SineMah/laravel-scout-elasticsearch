@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/)
 
 ## [Unreleased]
+## [5.0.2] - 2022-03-24
+### Added
+- multiple ElasticSearch nodes support
 
 ## [5.0.1] - 2021-07-23
 ### Added
