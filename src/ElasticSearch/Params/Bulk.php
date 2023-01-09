@@ -17,6 +17,12 @@ final class Bulk
      */
     private $deleteDocs = [];
 
+    private ?string $index;
+
+    public function __construct(?string $index = null) {
+        $this->index = $index;
+    }
+
     /**
      * @param  array|object  $docs
      */
@@ -38,6 +44,8 @@ final class Bulk
      */
     public function toArray(): array
     {
+
+
         $payload = ['body' => []];
         $payload = collect($this->indexDocs)->reduce(
             function ($payload, $model) {
@@ -48,12 +56,11 @@ final class Bulk
                 $scoutKey = $model->getScoutKey();
                 $payload['body'][] = [
                     'index' => [
-                        '_index' => $model->searchableAs(),
+                        '_index' => $this->index ?? $model->searchableAs(true),
                         '_id' => $scoutKey,
                         'routing' => false === empty($routing) ? $routing : $scoutKey,
                     ],
                 ];
-
                 $payload['body'][] = array_merge(
                     $model->toSearchableArray(),
                     $model->scoutMetadata(),
@@ -70,7 +77,7 @@ final class Bulk
                 $scoutKey = $model->getScoutKey();
                 $payload['body'][] = [
                     'delete' => [
-                        '_index' => $model->searchableAs(),
+                        '_index' => $this->index ?? $model->searchableAs(),
                         '_id' => $scoutKey,
                         'routing' => false === empty($routing) ? $routing : $scoutKey,
                     ],

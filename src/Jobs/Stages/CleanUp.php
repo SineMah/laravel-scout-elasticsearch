@@ -2,8 +2,10 @@
 
 namespace Matchish\ScoutElasticSearch\Jobs\Stages;
 
-use Elastic\Elasticsearch\Client;
+use Matchish\ScoutElasticSearch\Creator\Helper;
+use Matchish\ScoutElasticSearch\Creator\ProxyClient;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
+use OpenSearch\Common\Exceptions\Missing404Exception;
 use Matchish\ScoutElasticSearch\ElasticSearch\Params\Indices\Alias\Get as GetAliasParams;
 use Matchish\ScoutElasticSearch\ElasticSearch\Params\Indices\Delete as DeleteIndexParams;
 use Matchish\ScoutElasticSearch\Searchable\ImportSource;
@@ -26,13 +28,13 @@ final class CleanUp
         $this->source = $source;
     }
 
-    public function handle(Client $elasticsearch): void
+    public function handle(ProxyClient $elasticsearch): void
     {
         $source = $this->source;
         $params = GetAliasParams::anyIndex($source->searchableAs());
         try {
-            $response = $elasticsearch->indices()->getAlias($params->toArray())->asArray();
-        } catch (ClientResponseException $e) {
+            $response = Helper::convertToArray($elasticsearch->indices()->getAlias($params->toArray()));
+        } catch (ClientResponseException|Missing404Exception $e) {
             $response = [];
         }
         foreach ($response as $indexName => $data) {

@@ -2,12 +2,13 @@
 
 namespace Matchish\ScoutElasticSearch\Jobs\Stages;
 
-use Elastic\Elasticsearch\Client;
+use Matchish\ScoutElasticSearch\Creator\ProxyClient;
 use Matchish\ScoutElasticSearch\ElasticSearch\DefaultAlias;
 use Matchish\ScoutElasticSearch\ElasticSearch\Index;
 use Matchish\ScoutElasticSearch\ElasticSearch\Params\Indices\Create;
 use Matchish\ScoutElasticSearch\ElasticSearch\WriteAlias;
 use Matchish\ScoutElasticSearch\Searchable\ImportSource;
+use Illuminate\Support\Arr;
 
 /**
  * @internal
@@ -23,24 +24,31 @@ final class CreateWriteIndex
      */
     private $index;
 
+    private string $name;
+
     /**
      * @param  ImportSource  $source
      * @param  Index  $index
      */
-    public function __construct(ImportSource $source, Index $index)
+    public function __construct(ImportSource $source, Index $index, string $name)
     {
         $this->source = $source;
         $this->index = $index;
+        $this->name = $name;
     }
 
-    public function handle(Client $elasticsearch): void
+    public function handle(ProxyClient $elasticsearch): void
     {
         $source = $this->source;
+        $config = $this->index->config();
+
         $this->index->addAlias(new WriteAlias(new DefaultAlias($source->searchableAs())));
 
+        Arr::forget($config, 'aliases');
+
         $params = new Create(
-            $this->index->name(),
-            $this->index->config()
+            $this->name,
+            $config
         );
 
         $elasticsearch->indices()->create($params->toArray());
